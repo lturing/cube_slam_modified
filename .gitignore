@@ -1,0 +1,11 @@
+build/*
+lib/*
+Thirdparty/DBoW2/build/*
+Thirdparty/g2o/build/*
+onnxruntime-linux-x64-1.16.3/*
+out1.jpg
+out.avi
+.vscode/*
+Examples/bin/*
+KeyFrameTrajectory.txt
+Vocabulary/ORBvoc.txt

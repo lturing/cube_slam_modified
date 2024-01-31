@@ -1,0 +1,315 @@
+cmake_minimum_required(VERSION 2.8)
+project(CUBE_SLAM CXX)
+
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE Release)
+ENDIF()
+
+SET(CMAKE_BUILD_TYPE Debug)
+#SET(CMAKE_BUILD_TYPE Release)
+#SET(CMAKE_BUILD_TYPE relwithdebinfo)
+
+MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
+
+# change by spurs
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -O3 -march=native")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -march=native")
+#set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -O3 ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 ")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}   -Wall -O3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}   -Wall -O3")
+
+
+# Check C++14 or C++0x support
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+if(COMPILER_SUPPORTS_CXX11)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+   add_definitions(-DCOMPILEDWITHC11)
+   message(STATUS "Using flag -std=c++14.")
+elseif(COMPILER_SUPPORTS_CXX0X)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+   add_definitions(-DCOMPILEDWITHC0X)
+   message(STATUS "Using flag -std=c++0x.")
+else()
+   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
+endif()
+
+# LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
+
+# #define ObjectFixScale
+#add_definitions(-DObjectFixScale) 
+#ADD_DEFINITIONS( -DCUDA_STATUS=true )
+
+# #define foo=5
+#add_definitions(-Dfoo=5) 
+
+find_package(OpenCV 4.0 REQUIRED)
+if(NOT OpenCV_FOUND)
+    message(FATAL_ERROR "OpenCV > 4.0 not found.")
+endif()
+
+MESSAGE("OPENCV VERSION:")
+MESSAGE(${OpenCV_VERSION})
+
+find_package(Eigen3 3.1.0 REQUIRED)
+find_package(Pangolin REQUIRED)
+
+# adding for point cloud viewer and mapper
+# find_package( PCL REQUIRED COMPONENTS common)
+find_package( PCL REQUIRED)
+
+set(ONNXRUNTIME_DIR "${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.16.3")
+
+
+include_directories(
+${PROJECT_SOURCE_DIR}
+
+${PROJECT_SOURCE_DIR}/line_lbd
+${PROJECT_SOURCE_DIR}/line_lbd/include
+
+${PROJECT_SOURCE_DIR}/detect_3d_cuboid
+${PROJECT_SOURCE_DIR}/detect_3d_cuboid/include
+
+#${PROJECT_SOURCE_DIR}/object_slam
+#${PROJECT_SOURCE_DIR}/object_slam/include 
+
+${PROJECT_SOURCE_DIR}/orb_object_slam
+${PROJECT_SOURCE_DIR}/orb_object_slam/include 
+
+${PROJECT_SOURCE_DIR}/YOLOv8/bytetrack/include
+${PROJECT_SOURCE_DIR}/YOLOv8/include
+
+${EIGEN3_INCLUDE_DIR}
+${Pangolin_INCLUDE_DIRS}
+${PCL_INCLUDE_DIRS}
+${OpenCV_INCLUDE_DIRS} 
+${ONNXRUNTIME_DIR}/include
+)
+
+add_definitions( ${PCL_DEFINITIONS} )
+link_directories( ${PCL_LIBRARY_DIRS} )
+add_subdirectory(Thirdparty/g2o)
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+
+
+# yolov8
+add_library(yolov8_lib SHARED
+YOLOv8/src/detector_onnxruntime.cpp
+YOLOv8/src/detector_opencv_dnn.cpp
+YOLOv8/src/segmentor_onnxruntime.cpp
+YOLOv8/src/segmentor_opencv_dnn.cpp
+
+YOLOv8/bytetrack/src/lapjv.cpp
+YOLOv8/bytetrack/src/BytekalmanFilter.cpp
+YOLOv8/bytetrack/src/BYTETracker.cpp
+YOLOv8/bytetrack/src/STrack.cpp
+
+YOLOv8/include/data_struct.h
+YOLOv8/include/detector_onnxruntime.h
+YOLOv8/include/detector_opencv_dnn.h
+YOLOv8/include/segmentor_onnxruntime.h
+YOLOv8/include/segmentor_opencv_dnn.h
+
+YOLOv8/bytetrack/include/lapjv.h
+YOLOv8/bytetrack/include/BytekalmanFilter.h
+YOLOv8/bytetrack/include/BYTETracker.h
+YOLOv8/bytetrack/include/STrack.h
+)
+
+
+target_link_libraries(yolov8_lib
+${ONNXRUNTIME_DIR}/lib/libonnxruntime.so
+${OpenCV_LIBS}
+${EIGEN3_LIBS}
+)
+
+
+message("***** CUDA")
+
+find_package(CUDA)
+if(CUDA_FOUND)
+    message("********** CUDA " ${CUDA_VERSION} " founded in: " ${CUDA_INCLUDE_DIRS})
+    ADD_DEFINITIONS( -DCUDA_STATUS=true )
+    target_include_directories(yolov8_lib PUBLIC ${CUDA_INCLUDE_DIRS})
+    target_link_libraries(yolov8_lib ${CUDA_LIBRARIES})
+else()
+    message("********** CUDA not founded")
+    ADD_DEFINITIONS( -DCUDA_STATUS=false )
+endif(CUDA_FOUND)
+
+# Force to use CPU
+#ADD_DEFINITIONS( -DCUDA_STATUS=false )
+
+
+
+# detect_line
+add_library(line_lbd_lib SHARED
+line_lbd/src/binary_descriptor_matcher.cpp
+line_lbd/src/binary_descriptor.cpp
+line_lbd/src/draw.cpp
+line_lbd/src/line_lbd_allclass.cpp
+line_lbd/src/lsd.cpp
+line_lbd/src/LSDDetector.cpp
+
+line_lbd/include/bitarray.hpp
+line_lbd/include/bitops.hpp
+line_lbd/include/descriptor.hpp
+line_lbd/include/line_descriptor.hpp
+line_lbd/include/line_lbd_allclass.h
+line_lbd/include/precomp.hpp
+line_lbd/include/types.hpp
+)
+
+target_link_libraries(line_lbd_lib
+${OpenCV_LIBS}
+${EIGEN3_LIBS}
+${Pangolin_LIBRARIES}
+)
+
+
+# detect_3d_cuboid
+add_library(detect_3d_cuboid_lib SHARED
+detect_3d_cuboid/src/box_proposal_detail.cpp
+detect_3d_cuboid/src/matrix_utils.cpp
+detect_3d_cuboid/src/object_3d_util.cpp
+
+detect_3d_cuboid/include/detect_3d_cuboid.h
+detect_3d_cuboid/include/matrix_utils.h
+detect_3d_cuboid/include/object_3d_util.h
+)
+
+target_link_libraries(detect_3d_cuboid_lib
+${OpenCV_LIBS}
+${EIGEN3_LIBS}
+${Pangolin_LIBRARIES}
+${PCL_LIBRARIES}
+${PROJECT_SOURCE_DIR}/lib/libyolov8_lib.so
+${PROJECT_SOURCE_DIR}/lib/libline_lbd_lib.so
+)
+
+# object_slam 
+add_library(object_slam_lib SHARED
+object_slam/src/empty.cc
+
+object_slam/include/g2o_Object.h
+object_slam/include/Object_landmark.h
+object_slam/include/Tracking_frame.h
+)
+
+target_link_libraries(object_slam_lib
+${OpenCV_LIBS}
+${EIGEN3_LIBS}
+${Pangolin_LIBRARIES}
+${PCL_LIBRARIES}
+${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+${PROJECT_SOURCE_DIR}/lib/libline_lbd_lib.so
+${PROJECT_SOURCE_DIR}/lib/libdetect_3d_cuboid_lib.so
+)
+
+
+# orb_object_slam
+add_library(orb_object_slam_lib SHARED
+orb_object_slam/src/Converter.cc
+orb_object_slam/src/Frame.cc
+orb_object_slam/src/FrameDrawer.cc
+orb_object_slam/src/g2o_Object.cpp
+orb_object_slam/src/Initializer.cc
+orb_object_slam/src/KeyFrame.cc
+orb_object_slam/src/KeyFrameDatabase.cc
+orb_object_slam/src/LocalMapping.cc
+orb_object_slam/src/LoopClosing.cc
+orb_object_slam/src/Map.cc
+orb_object_slam/src/MapDrawer.cc
+orb_object_slam/src/MapObject.cc
+orb_object_slam/src/MapPoint.cc
+orb_object_slam/src/Optimizer.cc
+orb_object_slam/src/ORBextractor.cc
+orb_object_slam/src/ORBmatcher.cc
+orb_object_slam/src/Parameters.cpp
+orb_object_slam/src/PnPsolver.cc
+orb_object_slam/src/Sim3Solver.cc
+orb_object_slam/src/System.cc
+orb_object_slam/src/Tracking_util.cc
+orb_object_slam/src/Tracking.cc
+orb_object_slam/src/Viewer.cc
+
+orb_object_slam/include/Converter.h
+orb_object_slam/include/Frame.h
+orb_object_slam/include/FrameDrawer.h
+orb_object_slam/include/g2o_Object.h
+orb_object_slam/include/Initializer.h
+orb_object_slam/include/KeyFrame.h
+orb_object_slam/include/KeyFrameDatabase.h
+orb_object_slam/include/LocalMapping.h
+orb_object_slam/include/LoopClosing.h
+orb_object_slam/include/Map.h
+orb_object_slam/include/MapDrawer.h
+orb_object_slam/include/MapObject.h
+orb_object_slam/include/MapPoint.h
+orb_object_slam/include/Optimizer.h
+orb_object_slam/include/ORBextractor.h
+orb_object_slam/include/ORBmatcher.h
+orb_object_slam/include/ORBVocabulary.h
+orb_object_slam/include/Parameters.h
+orb_object_slam/include/PnPsolver.h
+orb_object_slam/include/Sim3Solver.h
+orb_object_slam/include/System.h
+orb_object_slam/include/Tracking.h
+orb_object_slam/include/Viewer.h
+)
+
+target_link_libraries(orb_object_slam_lib
+${OpenCV_LIBS}
+${EIGEN3_LIBS}
+${Pangolin_LIBRARIES}
+${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+${PROJECT_SOURCE_DIR}/lib/libdetect_3d_cuboid_lib.so
+${PROJECT_SOURCE_DIR}/lib/libyolov8_lib.so
+${PROJECT_SOURCE_DIR}/lib/libline_lbd_lib.so
+${PCL_LIBRARIES}
+-lboost_serialization
+-lcrypto
+)
+
+
+# Build examples
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/bin)
+
+add_executable(detect_lines Examples/detect_lines.cc)
+target_link_libraries(detect_lines  line_lbd_lib)
+
+add_executable(detect_3d_cuboid
+        Examples/detect_3d_cuboid.cc)
+target_link_libraries(detect_3d_cuboid detect_3d_cuboid_lib yolov8_lib line_lbd_lib)
+
+
+add_executable(detect_lines_3d_cuboid
+        Examples/detect_lines_3d_cuboid.cc)
+target_link_libraries(detect_lines_3d_cuboid detect_3d_cuboid_lib line_lbd_lib yolov8_lib)
+
+add_executable(mono_kitti
+        Examples/mono_kitti.cc)
+target_link_libraries(mono_kitti orb_object_slam_lib detect_3d_cuboid_lib yolov8_lib line_lbd_lib)
+
+
+add_executable(yolov8_detect_segment Examples/yolov8_detect_segment.cc)
+target_link_libraries(yolov8_detect_segment yolov8_lib)
+
+add_executable(yolov8_detect_track Examples/yolov8_detect_track.cc)
+target_link_libraries(yolov8_detect_track yolov8_lib)
+
+add_executable(yolov8_segment_track Examples/yolov8_segment_track.cc)
+target_link_libraries(yolov8_segment_track yolov8_lib)
+
+
+add_executable(detect_2d_lines_3d_cuboid
+    Examples/detect_2d_lines_3d_cuboid.cc)
+target_link_libraries(detect_2d_lines_3d_cuboid yolov8_lib detect_3d_cuboid_lib line_lbd_lib)

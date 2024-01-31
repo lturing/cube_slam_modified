@@ -1,0 +1,3 @@
+./Examples/bin/mono_kitti ./Vocabulary/ORBvoc.txt Examples/config/KITTI_10_03.yaml /home/spurs/dataset/kitti_raw/2011_10_03/2011_10_03_drive_0047_sync/image_02
+
+./Examples/bin/mono_kitti ./Vocabulary/ORBvoc.txt Examples/config/KITTI00-02_me.yaml /home/spurs/dataset/kitti_rgb_00

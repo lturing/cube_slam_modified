@@ -1,0 +1,123 @@
+%YAML:1.0
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+
+# Camera calibration and distortion parameters (OpenCV) 
+Camera.fx: 721.5377
+Camera.fy: 721.5377
+Camera.cx: 609.5593
+Camera.cy: 172.8540
+
+Camera.k1: 0.0
+Camera.k2: 0.0
+Camera.p1: 0.0
+Camera.p2: 0.0
+
+Camera.width: 1241
+Camera.height: 376
+
+# Camera frames per second 
+Camera.fps: 10.0
+
+# stereo baseline times fx
+# gray
+#Camera.bf: 386.14479
+
+# color, we use color image
+Camera.bf: 382.66994
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 0
+
+# Close/Far threshold. Baseline times.
+ThDepth: 35
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 3000
+
+# ORB Extractor: Scale factor between levels in the scale pyramid 	
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid	
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast			
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.1
+Viewer.KeyFrameLineWidth: 1
+Viewer.GraphLineWidth: 1
+Viewer.PointSize: 2
+Viewer.CameraSize: 0.15
+Viewer.CameraLineWidth: 2
+Viewer.ViewpointX: 0
+Viewer.ViewpointY: -10
+Viewer.ViewpointZ: -0.1
+Viewer.ViewpointF: 2000
+
+init_x: 0
+init_y:  0
+init_z: 1.65
+init_qx: -0.7071
+init_qy: 0
+init_qz: 0
+init_qw: 0.7071
+obj_det_2d_thre: 0.5
+mono_firstframe_Obj_depth_init: false
+mono_firstframe_truth_depth_init: true
+mono_allframe_obj_depth_init: false
+build_worldframe_on_ground: true
+enable_ground_height_scale: false
+triangulate_dynamic_pts: false
+ground_roi_middle: 3.0
+ground_roi_lower: 3.0
+ground_inlier_pts: 20
+ground_dist_ratio: 0.08
+ground_everyKFs: 10
+use_truth_trackid: true
+whether_save_online_detected_cuboids: false
+whether_save_final_optimized_cuboids: false
+#camera_object_BA_weight: 2.0
+#object_velocity_BA_weight: 0.5
+
+camera_object_BA_weight: 2.0
+object_velocity_BA_weight: 3.0
+
+whether_dynamic_object: true
+remove_dynamic_features: true
+use_dynamic_klt_features: false
+seg_onnx_path: /home/spurs/x/yolov8/yolov8s-seg.onnx
+det_onnx_path: /home/spurs/x/yolov8/yolov8s.onnx
+
+load_truth_pose: false
+scene_unique_id: kitti
+bundle_object_opti: true
+whether_detect_object: true
+whether_read_offline_cuboidtxt: false
+associate_point_with_object: true
+
+#dynamic debug
+ba_dyna_pt_obj_cam: false
+ba_dyna_obj_velo: true
+ba_dyna_obj_cam: true
+
+cuboid_folder: cuboid_moma
+seg_folder: seg
+det_folder: det
+
+# for mono_firstframe_truth_depth_init
+right_folder: image_03/data
+#cuboid_folder: cuboid
