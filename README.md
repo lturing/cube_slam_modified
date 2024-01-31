@@ -20,7 +20,7 @@ cube_slam具备以下亮点
 ## b战视频demo
 - [语义cube_slam之静态场景](https://www.bilibili.com/video/BV1Vt421W7GN)
 
-
+<div align=center><img src="./cube_slam.jpg" width="80%"/></div>
 
 ## how to start 
 ```
