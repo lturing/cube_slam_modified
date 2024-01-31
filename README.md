@@ -40,6 +40,7 @@ yolo export model=yolov8m-seg.pt format=onnx imgsz=640,640 opset=15
 - pcl-1.13
 - eigen-3.3.7
 - onnxruntime-linux-x64-1.16.3 https://github.com/microsoft/onnxruntime/releases
+- ubuntu20
 
 git clone https://github.com/lturing/cube_slam_modified
 cd cube_slam_modified
