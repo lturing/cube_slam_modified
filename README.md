@@ -12,6 +12,7 @@ cube_slam具备以下亮点
     - 在线3d目标分割与检测
     - bytetrack的目标跟踪
     - 针对kitti数据集，对物体添加高度和运动方向一致性约束(物体-物体约束)
+- 回环后更新物体位姿
 
 ## 待解决的问题
 1. 需要进一步优化动态场景
@@ -21,6 +22,8 @@ cube_slam具备以下亮点
 - [语义cube_slam之静态场景](https://www.bilibili.com/video/BV1Vt421W7GN)
 
 <div align=center><img src="./cube_slam.jpg" width="80%"/></div>
+
+<div align=center><img src="./cube_slam_2.jpg" width="80%"/></div>
 
 ## how to start 
 ```
