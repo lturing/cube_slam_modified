@@ -39,6 +39,7 @@ yolo export model=yolov8m-seg.pt format=onnx imgsz=640,640 opset=15
 - opencv-4.8 and opencv_contrib-4.8
 - pcl-1.13
 - eigen-3.3.7
+- onnxruntime-linux-x64-1.16.3 https://github.com/microsoft/onnxruntime/releases
 
 git clone https://github.com/lturing/cube_slam_modified
 cd cube_slam_modified
@@ -52,7 +53,6 @@ cmake .. && make -j6 && cd ..
 
 # 动态场景
 ## https://s3.eu-central-1.amazonaws.com/avg-kitti/raw_data/2011_10_03_drive_0047/2011_10_03_drive_0047_sync.zip
-
 ./Examples/bin/mono_kitti ./Vocabulary/ORBvoc.txt Examples/config/KITTI_10_03.yaml /home/spurs/dataset/kitti_raw/2011_10_03/2011_10_03_drive_0047_sync/image_02
 
 # 在线3d框检测
