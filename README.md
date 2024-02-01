@@ -18,7 +18,7 @@ cube_slam具备以下亮点
 1. 需要进一步优化动态场景
 2. 由于需要预先知道物体的真实尺寸(长宽高)，本代码中只考虑car，可以根据需求修改
 
-## b战视频demo
+## b站视频demo
 - [语义cube_slam之静态场景](https://www.bilibili.com/video/BV1Vt421W7GN)
 
 <div align=center><img src="./cube_slam.jpg" width="80%"/></div>
